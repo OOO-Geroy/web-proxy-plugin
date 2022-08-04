@@ -78,6 +78,9 @@ class Web_Proxy
 
 		$this->load_dependencies();
 		$this->set_locale();
+		$this->define_cpt();
+		$this->define_acf_groups();
+		$this->define_rest_api();
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
 	}
@@ -117,6 +120,24 @@ class Web_Proxy
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
 		require_once plugin_dir_path(dirname(__FILE__)) . 'admin/class-web-proxy-admin.php';
+
+		/**
+		 * The class responsible for defining cpt
+		 * of the plugin.
+		 */
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-web-proxy-cpt-model.php';
+
+		/**
+		 * The class responsible for defining acf groups
+		 * of the plugin.
+		 */
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-web-proxy-acf-model.php';
+
+		/**
+		 * The class responsible for defining rest api
+		 * of the plugin.
+		 */
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-web-proxy-rest-controller.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the admin area.
@@ -164,7 +185,6 @@ class Web_Proxy
 		$this->loader->add_action('admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts');
 
 		$this->loader->add_action('admin_menu', $plugin_admin, 'add_menu_pages');
-		$this->loader->add_action('admin_init', $plugin_admin, 'settings_init');
 	}
 
 	/**
@@ -182,6 +202,33 @@ class Web_Proxy
 		$this->loader->add_action('init', $plugin_public, 'register_styles');
 		$this->loader->add_action('init', $plugin_public, 'register_scripts');
 		$this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'inline_scripts');
+	}
+
+	/**
+	 * Define cpt
+	 */
+	private function define_cpt()
+	{
+		$plugin_model = new Web_Proxy_Cpt_Model();
+		$this->loader->add_action('init', $plugin_model, 'register_cpt');
+	}
+
+	/**
+	 * Define acf groups
+	 */
+	private function define_acf_groups()
+	{
+		$plugin_model = new Web_Proxy_Acf_Model();
+		$this->loader->add_action('acf/init', $plugin_model, 'register_acf_groups');
+	}
+
+	/**
+	 * 
+	 */
+	private function define_rest_api()
+	{
+		$controller = new WP_REST_Apartments_Controller();
+		$this->loader->add_action('rest_api_init', $controller, 'register_routes');
 	}
 
 	/**

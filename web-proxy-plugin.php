@@ -14,7 +14,7 @@
  *
  * Plugin Name:       Web Proxy Configuration
  * Plugin URI:        https://github.com/OOO-Geroy/web-proxy-plugin
- * Description:       The plugin provides an interface for creating temporary mail.
+ * Description:       The plugin provides an interface for managing a web proxy https://webproxy.vpntester.net/
  * Version:           1.0.0
  * Author:            Evgeny Tsvigun
  * Author URI:        https://github.com/Delave-las-Kure
