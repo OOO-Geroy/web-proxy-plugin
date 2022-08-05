@@ -144,9 +144,9 @@ class WP_REST_Apartments_Controller extends WP_REST_Controller
   public function prepare_data_for_response($item, $request)
   {
     $message = '';
-    if (str_contains(WP_REST_Server::CREATABLE, $request->get_method())  && !$request->get_param('id'))
+    if (strpos(WP_REST_Server::CREATABLE, $request->get_method()) !== false  && !$request->get_param('id'))
       $message = __('Ad successfully created', 'ppr');
-    elseif (str_contains(WP_REST_Server::EDITABLE, $request->get_method()))
+    elseif (strpos(WP_REST_Server::EDITABLE, $request->get_method())  !== false)
       $message = __('Ad successfully updated', 'ppr');
     else
       $message = __('Ad successfully finded', 'ppr');
