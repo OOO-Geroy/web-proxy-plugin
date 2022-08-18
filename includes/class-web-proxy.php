@@ -120,6 +120,7 @@ class Web_Proxy
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
 		require_once plugin_dir_path(dirname(__FILE__)) . 'admin/class-web-proxy-admin.php';
+		
 
 		/**
 		 * The class responsible for defining cpt
@@ -137,7 +138,8 @@ class Web_Proxy
 		 * The class responsible for defining rest api
 		 * of the plugin.
 		 */
-		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-web-proxy-rest-controller.php';
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-web-proxy-ad-rest-controller.php';
+		require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-web-proxy-settings-rest-controller.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the admin area.
@@ -185,6 +187,7 @@ class Web_Proxy
 		$this->loader->add_action('admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts');
 
 		$this->loader->add_action('admin_menu', $plugin_admin, 'add_menu_pages');
+		$this->loader->add_action('acf/init', $plugin_admin, 'add_acf_opt_page');
 	}
 
 	/**
@@ -227,8 +230,10 @@ class Web_Proxy
 	 */
 	private function define_rest_api()
 	{
-		$controller = new WP_REST_Apartments_Controller();
-		$this->loader->add_action('rest_api_init', $controller, 'register_routes');
+		$ad_controller = new WP_REST_Web_Proxy_Ad_Controller();
+		$options_controller = new WP_REST_Web_Proxy_Settings_Controller();
+		$this->loader->add_action('rest_api_init', $ad_controller, 'register_routes');
+		$this->loader->add_action('rest_api_init', $options_controller, 'register_routes');
 	}
 
 	/**

@@ -1,12 +1,11 @@
 <?
-class WP_REST_Apartments_Controller extends WP_REST_Controller
+class WP_REST_Web_Proxy_Ad_Controller extends WP_REST_Controller
 {
   static $ts_resource_name = 'ad';
-  static $ts_namespace = 'webproxy/v1';
 
   public function __construct()
   {
-    $this->namespace = self::$ts_namespace;
+    $this->namespace = WEB_PROXY_API_NAMESPACE;
     $this->resource_name = self::$ts_resource_name;
   }
 
@@ -143,6 +142,7 @@ class WP_REST_Apartments_Controller extends WP_REST_Controller
    */
   public function prepare_data_for_response($item, $request)
   {
+    require_once 'class-web-proxy-response.php';
     $message = '';
     if (strpos(WP_REST_Server::CREATABLE, $request->get_method()) !== false  && !$request->get_param('id'))
       $message = __('Ad successfully created', 'ppr');
@@ -151,7 +151,7 @@ class WP_REST_Apartments_Controller extends WP_REST_Controller
     else
       $message = __('Ad successfully finded', 'ppr');
 
-    return ['data' => $item, 'message' => $message];
+    return new REST_Web_Proxy_Response($item,  $message);
   }
 
   public function authorization_status_code()

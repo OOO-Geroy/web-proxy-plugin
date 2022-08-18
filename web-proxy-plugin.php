@@ -42,7 +42,7 @@ define('WEB_PROXY_VERSION', '1.0.0');
  */
 define('WEB_PROXY_FOLDER',  plugin_dir_path(__FILE__));
 define('WEB_PROXY_URL', plugin_dir_url(__FILE__));
-
+define('WEB_PROXY_API_NAMESPACE', 'webproxy/v1');
 
 /**
  * The code that runs during plugin activation.

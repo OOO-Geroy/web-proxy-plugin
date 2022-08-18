@@ -106,4 +106,20 @@ class Web_Proxy_Admin
 	{
 		add_menu_page('Web Proxy Settings', 'Web Proxy', 'manage_options', 'web-proxy-plugin', '', 'dashicons-admin-site-alt3', 50);
 	}
+
+	function add_acf_opt_page()
+	{
+		if (function_exists('acf_add_options_page')) {
+
+			// Register options page.
+			$option_page = acf_add_options_page(array(
+				'page_title'    => __('Web Proxy Options'),
+				'menu_title'    => __('Options'),
+				'menu_slug'     => 'web-proxy-plugin-options',
+				'capability'    => 'edit_posts',
+				'redirect'      => false,
+				'parent_slug'   => 'web-proxy-plugin'
+			));
+		}
+	}
 }
