@@ -11,7 +11,7 @@ class WP_REST_Web_Proxy_Ad_Controller extends WP_REST_Controller
 
   static function request($method, $params)
   {
-    $request = new WP_REST_Request($method, '/' . self::$ts_namespace . '/' . self::$ts_resource_name);
+    $request = new WP_REST_Request($method, '/' .  WEB_PROXY_API_NAMESPACE . '/' . self::$ts_resource_name);
 
     if (isset($params['body']))
       $request->set_body_params($params['body']);

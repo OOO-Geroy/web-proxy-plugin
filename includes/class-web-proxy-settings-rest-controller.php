@@ -39,11 +39,14 @@ class WP_REST_Web_Proxy_Settings_Controller extends WP_REST_Controller
 
   private function prepare_logo_settings() {
     $logo = get_field('web_proxy_logo','options');
-
+    $image_attributes =$logo['image'] ? wp_get_attachment_image_src( $logo['image'], 'large' ) : [];
+    
     return [
       'logo' => [
-        'link' =>  $logo['image'] ? wp_get_attachment_image_url($logo['image'], 'large') : '',
-        'image_src' => $logo['link'] ?: '',
+        'link' => $logo['link'] ?: '',
+        'image_src' => $image_attributes ? $image_attributes[0] : '',
+        'width' =>  $image_attributes ? $image_attributes[1] : 0,
+        'height' =>  $image_attributes ? $image_attributes[2] : 0,
       ]
      
     ];
@@ -119,10 +122,21 @@ class WP_REST_Web_Proxy_Settings_Controller extends WP_REST_Controller
             'link' => array(
               'description'  => esc_html__('Unique identifier for the object.', 'ppr'),
               'type'         => 'string',
+              'required'     => true,
             ),
             'image_src' => array(
               'description'  => esc_html__('The label for the object.', 'ppr'),
               'type'         => 'string',
+              'required'     => true,
+            ),
+            'height' =>  array(
+              'description'  => esc_html__('Logo height.', 'ppr'),
+              'type'         => 'integer',
+              'required'     => true,
+            ),
+            'height' =>  array(
+              'description'  => esc_html__('Logo width.', 'ppr'),
+              'type'         => 'integer',
               'required'     => true,
             ),
           )
