@@ -36,7 +36,7 @@ class Web_Proxy_Acf_Model
 	{
 		if (function_exists('acf_add_local_field_group')) :
 
-			acf_add_local_field_group(array(
+			/*acf_add_local_field_group(array(
 				'key' => 'group_62ec070ededb8',
 				'title' => 'Web Proxy Ad',
 				'fields' => array(
@@ -93,7 +93,7 @@ class Web_Proxy_Acf_Model
 				'hide_on_screen' => '',
 				'active' => true,
 				'description' => '',
-			));
+			));*/
 
 		endif;
 	}

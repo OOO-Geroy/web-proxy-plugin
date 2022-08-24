@@ -42,7 +42,7 @@ class Web_Proxy_Cpt_Model
 			'show_in_rest'        => false,
 			'menu_icon'           => null,
 			'hierarchical'        => false,
-			'supports'            => ['title'],
+			'supports'            => ['title', 'thumbnail', 'editor'],
 			'taxonomies'          => [],
 			'has_archive'         => false,
 			'rewrite'             => false,

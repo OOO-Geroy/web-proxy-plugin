@@ -52,20 +52,11 @@ class WP_REST_Web_Proxy_Ad_Controller extends WP_REST_Controller
   public function get_items($request)
   {
 
-    $ads = get_posts([
-      'post_type'   => 'web-proxy-ad',
-      'posts_per_page' => 1,
-      'orderby' => 'rand'
-    ]);
+    $query_props = $this->prepare_search_query_for_database($request);
 
+    $post_ids = get_posts($query_props);
 
-    $ads_arr = array_map(fn ($ad) => [
-      'id' => $ad->ID,
-      'label' => get_field('label', $ad->ID),
-      'link' => get_field('link', $ad->ID),
-    ], $ads);
-
-    $response = rest_ensure_response($this->prepare_data_for_response($ads_arr, $request));
+    $response = rest_ensure_response($this->prepare_data_for_response(array_map(fn ($id) => $this->prepare_item($id), $post_ids), $request));
 
     return $response;
   }
@@ -113,6 +104,50 @@ class WP_REST_Web_Proxy_Ad_Controller extends WP_REST_Controller
     return true;
   }
 
+  protected function prepare_item($id)
+  {
+    $ad_type = get_field('ad_type', $id);
+
+    $data = [
+      'ad_type' => $ad_type,
+      'content' =>  apply_filters('the_content', get_post_field('post_content', $id))
+    ];
+
+    if ($ad_type ===   'header_inline') {
+    } elseif ($ad_type ===   'popup') {
+      $logo = wp_get_attachment_image_src(get_field('logo', $id), 'large');
+      $thumb = wp_get_attachment_image_src(get_post_thumbnail_id($id), 'large');
+
+      $btn = get_field('button', $id);
+
+      $data['cookies_max_age'] = (int) get_field('cookies_max_age', $id);
+      $data['show_delay'] = (int) get_field('show_delay', $id);
+
+      if ($logo)
+        $data['logo'] = [
+          'url' => $logo[0],
+          'width' => (float) $logo[1],
+          'height' => (float) $logo[2]
+        ];
+      if ($thumb)
+        $data['background'] = [
+          'url' => $thumb[0],
+          'width' => (float) $thumb[1],
+          'height' => (float) $thumb[2]
+        ];
+
+      if ($btn['link'])
+        $data['button'] = [
+          'label' =>  $btn['label'],
+          'href' => $btn['link']
+        ];
+
+      $data['tricks_type'] =  get_field('tricks_type', $id);
+    }
+
+    return $data;
+  }
+
   /**
    * Prepare search query for db.
    *
@@ -122,12 +157,36 @@ class WP_REST_Web_Proxy_Ad_Controller extends WP_REST_Controller
   protected function prepare_search_query_for_database($request)
   {
     $schema = $this->get_collection_params();
-    $req_data = $request->get_params();
-    $data = [];
+    $req_data = $request->get_query_params();
+    $data = [
+      'post_type'    => 'web-proxy-ad',
+      'fields' => 'ids',
+      'meta_query' => [
+        'relation' => 'AND'
+      ]
+    ];
 
     foreach ($schema as $key => $property) {
-      if (!isset($req_data[$key])) continue;
-      $data[$key] = $req_data[$key];
+      if (!isset($req_data[$key]) && !isset($property['default'])) continue;
+
+      switch ($key) {
+        case 'ad_type':
+          $data['meta_query'][] = [
+            'key' => $key,
+            'value' => isset($req_data[$key]) ? $req_data[$key] : $property['default'],
+            'compare'   => '=',
+          ];
+          break;
+        case 'per_page':
+          $data['posts_per_page'] = isset($req_data[$key]) ? $req_data[$key] : 15;
+          break;
+        case 'page':
+          $data['offset'] = isset($req_data[$key]) ? ($req_data[$key] - 1) * (isset($data['posts_per_page']) ? $data['posts_per_page'] : 1) : 0;
+          break;
+        default:
+          $data[$key] = isset($req_data[$key]) ? $req_data[$key] : $property['default'];
+          break;
+      }
     }
 
     return $data;
@@ -140,7 +199,7 @@ class WP_REST_Web_Proxy_Ad_Controller extends WP_REST_Controller
    * @param WP_REST_Request $request Request object.
    * @return mixed
    */
-  public function prepare_data_for_response($item, $request)
+  private function prepare_data_for_response($item, $request)
   {
     require_once 'class-web-proxy-response.php';
     $message = '';
@@ -180,11 +239,31 @@ class WP_REST_Web_Proxy_Ad_Controller extends WP_REST_Controller
         'default'           => 1,
         'sanitize_callback' => 'absint',
       ),
-      'per_page' => array(
-        'description'       => 'Maximum number of items to be returned in result set.',
+      'per_page' => [
+        'description'       => __('Maximum number of items to be returned in result set.'),
         'type'              => 'integer',
         'default'           => 10,
+        'minimum'           => 1,
         'sanitize_callback' => 'absint',
+      ],
+      'ad_type' => array(
+        'description'       => __('Ad type.'),
+        'type'        => ['string', 'array'],
+        'enum'        => ['header_inline', 'popup'],
+        'items' => array([
+          'type'   => 'string',
+          'enum'        => ['header_inline', 'popup'],
+        ]),
+      ),
+      'order' => [
+        'description' => __('Order sort attribute ascending or descending.'),
+        'type'        => 'string',
+        'default'     => 'desc',
+        'enum'        => ['asc', 'desc'],
+      ],
+      'orderby' => array(
+        'description'  => __('orderby as wp_query'),
+        'type'        => 'string',
       ),
     );;
   }
@@ -209,21 +288,71 @@ class WP_REST_Web_Proxy_Ad_Controller extends WP_REST_Controller
       'type'                 => 'object',
       // In JSON Schema you can specify object properties in the properties attribute.
       'properties'           => array(
-        'id' => array(
-          'description'  => esc_html__('Unique identifier for the object.', 'ppr'),
-          'type'         => 'integer',
-          'context'      => array('view', 'edit'),
-          'readonly'     => true,
+        'ad_type' => array(
+          'description'       => __('Ad type.'),
+          'type'        => ['string', 'array'],
+          'enum'        => ['header_inline', 'popup'],
+          'items' => array([
+            'type'   => 'string',
+            'enum'        => ['header_inline', 'popup'],
+          ]),
         ),
-        'label' => array(
+        'content' => array(
           'description'  => esc_html__('The label for the object.', 'ppr'),
           'type'         => 'string',
-          'required'     => true,
         ),
-        'link' => array(
-          'description'  => esc_html__('The link for the object.', 'ppr'),
-          'type'         => 'string',
-          'required'     => true,
+        'cookies_max_age' => array(
+          'description'  => esc_html__('Cookie max age in seconds.', 'ppr'),
+          'type'         => 'number',
+        ),
+        'show_delay' => array(
+          'description'  => esc_html__('Show delay in seconds.', 'ppr'),
+          'type'         => 'number',
+        ),
+        'logo' => array(
+          'description'  => esc_html__('Show delay in seconds.', 'ppr'),
+          'type'         => 'object',
+          "properties" => array(
+            "url" => array(
+              "type" => "number"
+            ),
+            "width" => array(
+              "type" => "number"
+            ),
+            "height" => array(
+              "type" => "number"
+            ),
+          )
+        ),
+        'background' => array(
+          'description'  => esc_html__('Show delay in seconds.', 'ppr'),
+          'type'         => 'object',
+          "properties" => array(
+            "url" => array(
+              "type" => "number"
+            ),
+            "width" => array(
+              "type" => "number"
+            ),
+            "height" => array(
+              "type" => "number"
+            ),
+          )
+        ),
+        'button' => array(
+          'description'  => esc_html__('Show delay in seconds.', 'ppr'),
+          'type'         => 'object',
+          'required' => true,
+          "properties" => array(
+            "href" => array(
+              "type" => "string",
+              'required' => true
+            ),
+            "label" => array(
+              "type" => "string",
+              'required' => true
+            ),
+          )
         ),
       ),
     );
