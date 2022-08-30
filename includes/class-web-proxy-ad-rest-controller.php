@@ -1,7 +1,7 @@
 <?
 class WP_REST_Web_Proxy_Ad_Controller extends WP_REST_Controller
 {
-  static $ts_resource_name = 'ad';
+  static $ts_resource_name = 'wpad';
 
   public function __construct()
   {
@@ -109,6 +109,8 @@ class WP_REST_Web_Proxy_Ad_Controller extends WP_REST_Controller
     $ad_type = get_field('ad_type', $id);
 
     $data = [
+      'id' => $id,
+      'title' => get_the_title($id),
       'ad_type' => $ad_type,
       'content' =>  apply_filters('the_content', get_post_field('post_content', $id))
     ];
@@ -170,9 +172,9 @@ class WP_REST_Web_Proxy_Ad_Controller extends WP_REST_Controller
       if (!isset($req_data[$key]) && !isset($property['default'])) continue;
 
       switch ($key) {
-        case 'ad_type':
+        case 'type':
           $data['meta_query'][] = [
-            'key' => $key,
+            'key' => 'ad_type',
             'value' => isset($req_data[$key]) ? $req_data[$key] : $property['default'],
             'compare'   => '=',
           ];
@@ -246,14 +248,20 @@ class WP_REST_Web_Proxy_Ad_Controller extends WP_REST_Controller
         'minimum'           => 1,
         'sanitize_callback' => 'absint',
       ],
-      'ad_type' => array(
+      'exclude' => array(
+        'description'       => __('Excluded ad ids.'),
+        'type'        => 'array',
+        'items' => array(
+          'type' => ['string', 'number']
+        )
+      ),
+      'type' => array(
         'description'       => __('Ad type.'),
-        'type'        => ['string', 'array'],
-        'enum'        => ['header_inline', 'popup'],
-        'items' => array([
+        'type'        => 'array',
+        'items' => array(
           'type'   => 'string',
           'enum'        => ['header_inline', 'popup'],
-        ]),
+        ),
       ),
       'order' => [
         'description' => __('Order sort attribute ascending or descending.'),
@@ -288,6 +296,14 @@ class WP_REST_Web_Proxy_Ad_Controller extends WP_REST_Controller
       'type'                 => 'object',
       // In JSON Schema you can specify object properties in the properties attribute.
       'properties'           => array(
+        'id' => array(
+          'description'       => __('Ad id.'),
+          'type'        => 'number'
+        ),
+        'title' => array(
+          'description'       => __('Ad title.'),
+          'type'        => 'string'
+        ),
         'ad_type' => array(
           'description'       => __('Ad type.'),
           'type'        => ['string', 'array'],
