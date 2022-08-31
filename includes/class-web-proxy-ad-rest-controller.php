@@ -119,11 +119,13 @@ class WP_REST_Web_Proxy_Ad_Controller extends WP_REST_Controller
     } elseif ($ad_type ===   'popup') {
       $logo = wp_get_attachment_image_src(get_field('logo', $id), 'large');
       $thumb = wp_get_attachment_image_src(get_post_thumbnail_id($id), 'large');
+      
 
       $btn = get_field('button', $id);
 
       $data['cookies_max_age'] = (int) get_field('cookies_max_age', $id);
       $data['show_delay'] = (int) get_field('show_delay', $id);
+      $data['tricks_type'] = get_field('tricks_type', $id);
 
       if ($logo)
         $data['logo'] = [
@@ -299,6 +301,11 @@ class WP_REST_Web_Proxy_Ad_Controller extends WP_REST_Controller
         'id' => array(
           'description'       => __('Ad id.'),
           'type'        => 'number'
+        ),
+        'tricks_type'  => array(
+          'description'       => __('Trick type.'),
+          'type'        => 'string',
+          'enum'        => ['small', 'full', 'usual']
         ),
         'title' => array(
           'description'       => __('Ad title.'),
