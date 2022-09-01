@@ -178,7 +178,7 @@ class WP_REST_Web_Proxy_Ad_Controller extends WP_REST_Controller
           $data['meta_query'][] = [
             'key' => 'ad_type',
             'value' => isset($req_data[$key]) ? $req_data[$key] : $property['default'],
-            'compare'   => '=',
+            'compare'   => 'IN',
           ];
           break;
         case 'per_page':
